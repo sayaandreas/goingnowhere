@@ -9,9 +9,9 @@ import (
 	"github.com/go-chi/render"
 )
 
-var s3IDKey = "bucketName"
+var bucketName = "bucketName"
 
-func s3(router chi.Router) {
+func bucket(router chi.Router) {
 	router.Get("/", getAllBuckets)
 	router.Route("/{bucketName}", func(router chi.Router) {
 		router.Use(APIContext)
@@ -22,12 +22,12 @@ func s3(router chi.Router) {
 
 func APIContext(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		bucketName := chi.URLParam(r, "bucketName")
-		if bucketName == "" {
+		bucketNameParam := chi.URLParam(r, "bucketName")
+		if bucketNameParam == "" {
 			render.Render(w, r, ErrorRenderer(fmt.Errorf("user ID is required")))
 			return
 		}
-		ctx := context.WithValue(r.Context(), s3IDKey, bucketName)
+		ctx := context.WithValue(r.Context(), bucketName, bucketNameParam)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
@@ -39,7 +39,7 @@ func getAllBuckets(w http.ResponseWriter, r *http.Request) {
 
 func getAllObjects(w http.ResponseWriter, r *http.Request) {
 	// bucketName := chi.URLParam(r, "bucketName")
-	bucketName := r.Context().Value(s3IDKey).(string)
+	bucketName := r.Context().Value(bucketName).(string)
 	resp := storageInstance.GetBucketObjectList(bucketName)
 	fmt.Fprint(w, resp)
 }

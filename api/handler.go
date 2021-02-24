@@ -17,7 +17,7 @@ func NewHandler(s storage.Storage) http.Handler {
 	storageInstance = s
 	router.MethodNotAllowed(methodNotAllowedHandler)
 	router.NotFound(notFoundHandler)
-	router.Route("/buckets", s3)
+	router.Route("/buckets", bucket)
 	return router
 }
 func methodNotAllowedHandler(w http.ResponseWriter, r *http.Request) {
