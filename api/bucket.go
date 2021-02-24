@@ -14,13 +14,13 @@ var bucketName = "bucketName"
 func bucket(router chi.Router) {
 	router.Get("/", getAllBuckets)
 	router.Route("/{bucketName}", func(router chi.Router) {
-		router.Use(APIContext)
+		router.Use(BucketContext)
 		router.Get("/", getAllObjects)
 	})
 
 }
 
-func APIContext(next http.Handler) http.Handler {
+func BucketContext(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		bucketNameParam := chi.URLParam(r, "bucketName")
 		if bucketNameParam == "" {
