@@ -1,7 +1,6 @@
 package storage
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -25,24 +24,32 @@ func NewStorageSession() Storage {
 	return ss
 }
 
-func (s Storage) GetBucketObjectList() {
-	bucketName := os.Getenv("BUCKET_NAME")
-	i := 0
-	err := s.client.ListObjectsPages(&s3.ListObjectsInput{
-		Bucket: &bucketName,
-	}, func(p *s3.ListObjectsOutput, last bool) (shouldContinue bool) {
-		fmt.Println("Page,", i)
-		i++
+func (s Storage) GetBucketObjectList(bucketName string) (resp *s3.ListObjectsV2Output) {
+	// i := 0
+	// err := s.client.ListObjectsPages(&s3.ListObjectsInput{
+	// 	Bucket: &bucketName,
+	// }, func(p *s3.ListObjectsOutput, last bool) (shouldContinue bool) {
+	// 	fmt.Println("Page,", i)
+	// 	i++
 
-		for _, obj := range p.Contents {
-			fmt.Println("Object:", *obj.Key)
-		}
-		return true
+	// 	for _, obj := range p.Contents {
+	// 		fmt.Println("Object:", *obj.Key)
+	// 	}
+	// 	return true
+	// })
+	// if err != nil {
+	// 	fmt.Println("failed to list objects", err)
+	// 	return
+	// } punya bos andreas
+	resp, err := s.client.ListObjectsV2(&s3.ListObjectsV2Input{
+		Bucket: aws.String(bucketName),
 	})
+
 	if err != nil {
-		fmt.Println("failed to list objects", err)
-		return
+		panic(err)
 	}
+
+	return resp
 }
 
 func (s Storage) GetBucketList() (resp *s3.ListBucketsOutput) {
