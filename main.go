@@ -17,8 +17,9 @@ func main() {
 
 	store := storage.NewStorageSession()
 	httpHandler := api.NewHandler(store)
-
+	log.Println("server listening : 3333")
 	http.ListenAndServe(":3333", httpHandler)
+
 	// store.GetBucketObjectList()
 
 	// resp := store.GetBucketList()
