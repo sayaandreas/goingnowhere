@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 )
 
 type Storage struct {
@@ -25,22 +26,6 @@ func NewStorageSession() Storage {
 }
 
 func (s Storage) GetBucketObjectList(bucketName string) (resp *s3.ListObjectsV2Output) {
-	// i := 0
-	// err := s.client.ListObjectsPages(&s3.ListObjectsInput{
-	// 	Bucket: &bucketName,
-	// }, func(p *s3.ListObjectsOutput, last bool) (shouldContinue bool) {
-	// 	fmt.Println("Page,", i)
-	// 	i++
-
-	// 	for _, obj := range p.Contents {
-	// 		fmt.Println("Object:", *obj.Key)
-	// 	}
-	// 	return true
-	// })
-	// if err != nil {
-	// 	fmt.Println("failed to list objects", err)
-	// 	return
-	// } punya bos andreas
 	resp, err := s.client.ListObjectsV2(&s3.ListObjectsV2Input{
 		Bucket: aws.String(bucketName),
 	})
@@ -59,4 +44,44 @@ func (s Storage) GetBucketList() (resp *s3.ListBucketsOutput) {
 	}
 
 	return resp
+}
+
+type UploadRequest struct {
+	FileName   string `json:"file_name"`
+	BucketName string `json:"bucket_name"`
+	ObjectKey  string `json:"object_key"`
+}
+
+func (s Storage) UploadFile(r UploadRequest) (location string, err error) {
+	file, err := os.Open(r.FileName)
+	if err != nil {
+		return "", nil
+	}
+
+	fileInfo, err := file.Stat()
+	if err != nil {
+		return "", nil
+	}
+
+	reader := &CustomReader{
+		fp:      file,
+		size:    fileInfo.Size(),
+		signMap: map[int64]struct{}{},
+	}
+
+	uploader := s3manager.NewUploader(s.session, func(u *s3manager.Uploader) {
+		u.PartSize = 5 * 1024 * 1024
+		u.LeavePartsOnError = true
+	})
+
+	output, err := uploader.Upload(&s3manager.UploadInput{
+		Bucket: aws.String(r.BucketName),
+		Key:    aws.String(r.ObjectKey),
+		Body:   reader,
+	})
+	if err != nil {
+		return "", err
+	}
+
+	return output.Location, nil
 }
