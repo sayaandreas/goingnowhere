@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"github.com/spf13/viper"
 )
 
 type Storage struct {
@@ -18,7 +19,7 @@ func NewStorageSession() Storage {
 	ss := Storage{}
 	sess := session.Must(session.NewSession())
 	svc := s3.New(sess, &aws.Config{
-		Region: aws.String(os.Getenv("AWS_REGION")),
+		Region: aws.String(viper.GetString("aws_region")),
 	})
 	ss.session = sess
 	ss.client = svc

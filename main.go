@@ -1,56 +1,9 @@
 package main
 
-import (
-	"context"
-	"fmt"
-	"log"
-	"net"
-	"net/http"
-	"os"
-	"os/signal"
-	"syscall"
-	"time"
-
-	"github.com/joho/godotenv"
-	"github.com/sayaandreas/goingnowhere/api"
-	"github.com/sayaandreas/goingnowhere/storage"
-)
+import "github.com/sayaandreas/goingnowhere/cmd"
 
 func main() {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
-
-	store := storage.NewStorageSession()
-
-	addr := ":3333"
-	listener, err := net.Listen("tcp", addr)
-	if err != nil {
-		log.Fatalf("Error occurred: %s", err.Error())
-	}
-
-	httpHandler := api.NewHandler(store)
-	server := &http.Server{
-		Handler: httpHandler,
-	}
-	go func() {
-		server.Serve(listener)
-	}()
-	defer Stop(server)
-	log.Printf("Started server on %s", addr)
-	ch := make(chan os.Signal, 1)
-	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
-	log.Println(fmt.Sprint(<-ch))
-	log.Println("Stopping API server.")
-}
-func Stop(server *http.Server) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	if err := server.Shutdown(ctx); err != nil {
-		log.Printf("Could not shut down server correctly: %v\n", err)
-		os.Exit(1)
-	}
+	cmd.Execute()
 }
 
 // func multipleFiles() {
