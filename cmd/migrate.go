@@ -33,6 +33,6 @@ var migrateCmd = &cobra.Command{
 		if err != nil {
 			panic(err)
 		}
-		m.Steps(1)
+		m.Steps(2)
 	},
 }
