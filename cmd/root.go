@@ -45,7 +45,6 @@ func Execute() {
 func init() {
 	cobra.OnInitialize(initConfig)
 	rootCmd.AddCommand(migrateCmd)
-	rootCmd.AddCommand(casbinCmd)
 }
 
 func initConfig() {
