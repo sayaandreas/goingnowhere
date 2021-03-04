@@ -8,6 +8,7 @@ import (
 	"github.com/casbin/casbin/v2"
 	"github.com/go-pg/pg/v9"
 	"github.com/sayaandreas/goingnowhere/api"
+	"github.com/sayaandreas/goingnowhere/db"
 	"github.com/sayaandreas/goingnowhere/storage"
 	"github.com/spf13/cobra"
 
@@ -18,13 +19,16 @@ var rootCmd = &cobra.Command{
 	Use:   "goingnowhere",
 	Short: "Run http server",
 	Run: func(cmd *cobra.Command, args []string) {
+		//aws storage
 		store := storage.NewStorageSession()
 		opts, err := pg.ParseURL(viper.GetString("dsn"))
 		if err != nil {
 			panic(err)
 		}
-		db := pg.Connect(opts)
-		adapter, err := pgadapter.NewAdapterByDB(db)
+
+		//casbin enforcer
+		pgConn := pg.Connect(opts)
+		adapter, err := pgadapter.NewAdapterByDB(pgConn)
 		e, err := casbin.NewEnforcer("./rbac_model.conf", adapter)
 		if err != nil {
 			panic(err)
@@ -33,7 +37,14 @@ var rootCmd = &cobra.Command{
 		if err != nil {
 			panic(err)
 		}
-		httpHandler := api.NewHandler(store, e)
+
+		//db connectionn
+		d, err := db.Initialize()
+		if err != nil {
+			panic(err)
+		}
+
+		httpHandler := api.NewHandler(store, e, d)
 		http.ListenAndServe(viper.GetString("addr"), httpHandler)
 	},
 }

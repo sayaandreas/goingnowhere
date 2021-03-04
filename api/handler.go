@@ -9,21 +9,25 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/render"
+	"github.com/sayaandreas/goingnowhere/db"
 	"github.com/sayaandreas/goingnowhere/storage"
 )
 
 var storageInstance storage.Storage
 var enforcer *casbin.Enforcer
+var dbInstance db.Database
 
-func NewHandler(s storage.Storage, e *casbin.Enforcer) http.Handler {
+func NewHandler(s storage.Storage, e *casbin.Enforcer, d db.Database) http.Handler {
 	router := chi.NewRouter()
 	router.Use(middleware.Logger)
 	storageInstance = s
 	enforcer = e
+	dbInstance = d
 	router.MethodNotAllowed(methodNotAllowedHandler)
 	router.NotFound(notFoundHandler)
 	router.Route("/buckets", bucket)
 	router.Route("/objects", objects)
+	router.Route("/auth", auth)
 	router.Post("/resources", resources)
 	return router
 }
